@@ -25,6 +25,7 @@ public class Code extends JFrame implements GLEventListener {
         GL4 gl = (GL4) GLContext.getCurrentGL();
         gl.glUseProgram(renderingProgram);
         gl.glPointSize(30.0f);
+        gl.glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         gl.glDrawArrays(GL_POINTS, 0, 1);
     }
 
@@ -47,7 +48,7 @@ public class Code extends JFrame implements GLEventListener {
                 "#version 430 \n",
                 "out vec4 color; \n",
                 "void main(void) \n",
-                "{ color = vec4(0.0, 0.0, 1.0, 1.0); } \n",
+                "{ if (gl_FragCoord.x < 200) color = vec4(1.0, 0.0, 0.0, 1.0); else color = vec4(0.0, 0.0, 1.0, 1.0); } \n",
         };
 
         int vShader = gl.glCreateShader(GL_VERTEX_SHADER);
