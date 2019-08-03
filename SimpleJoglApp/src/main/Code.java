@@ -11,12 +11,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.Vector;
+import com.jogamp.opengl.util.*;
 
 public class Code extends JFrame implements GLEventListener {
 
     private GLCanvas myCanvas;
     private int renderingProgram;
     private int vao[] = new int[1];
+    private float x = 0.0f; // location of triangle
+    private float inc = 0.0005f; // offset for moving the triangle
 
     public Code() {
         setTitle("Chapter2 - program1");
@@ -26,14 +29,25 @@ public class Code extends JFrame implements GLEventListener {
         myCanvas.addGLEventListener(this);
         this.add(myCanvas);
         this.setVisible(true);
+        Animator animtr = new Animator(myCanvas);
+        animtr.start();
     }
 
     public void display(GLAutoDrawable drawable) {
         GL4 gl = (GL4) GLContext.getCurrentGL();
+        gl.glClear(GL_DEPTH_BUFFER_BIT);
+        gl.glClear(GL_COLOR_BUFFER_BIT); // clear the background to black, each time
         gl.glUseProgram(renderingProgram);
         gl.glPointSize(30.0f);
-        gl.glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        gl.glDrawArrays(GL_POINTS, 0, 1);
+        //gl.glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe rendering, without rasterization
+        x += inc; // move the triangle along the x axis
+        if (x > 1.0f) inc = -0.0005f; // switch to moving the triangle to the left
+        if (x < -1.0f) inc = 0.0005f; // switch to moving the triangle to the right
+
+        int offsetLoc = gl.glGetUniformLocation(renderingProgram, "offset"); // retrieve pointer to "offset"
+        gl.glProgramUniform1f(renderingProgram, offsetLoc, x); // send value in "x" to offset
+
+        gl.glDrawArrays(GL_TRIANGLES, 0, 3); // a triangle as primitive with 3 vertices
     }
 
     public void init(GLAutoDrawable drawable) {
@@ -58,11 +72,11 @@ public class Code extends JFrame implements GLEventListener {
         String fshaderSource[] = readShaderSource("out/production/SimpleJoglApp/main/fragShader.glsl");
 
         int vShader = gl.glCreateShader(GL_VERTEX_SHADER);
-        gl.glShaderSource(vShader, 6, vshaderSource, null, 0); // 6 is the count of lines of source code
+        gl.glShaderSource(vShader, 10, vshaderSource, null, 0); // 10 is the count of lines of source code
         gl.glCompileShader(vShader);
 
         int fShader = gl.glCreateShader(GL_FRAGMENT_SHADER);
-        gl.glShaderSource(fShader, 11, fshaderSource, null, 0); // 11 is the count of lines of source code
+        gl.glShaderSource(fShader, 8, fshaderSource, null, 0); // 8 is the count of lines of source code
         gl.glCompileShader(fShader);
 
         gl.glShaderSource(vShader, vshaderSource.length, vshaderSource, null, 0);
