@@ -48,7 +48,7 @@ public class Code extends JFrame implements GLEventListener {
     public void init(GLAutoDrawable drawable)
     {
         GL4 gl = (GL4) GLContext.getCurrentGL();
-        renderingProgram = Utils.createShaderProgram("src/code/vertShader.glsl", "src/code/fragShader.glsl");
+        renderingProgram = Utils.createShaderProgram("SimpleJoglApp/src/code/vertShader.glsl", "SimpleJoglApp/src/code/fragShader.glsl");
         gl.glGenVertexArrays(vao.length, vao, 0);
         gl.glBindVertexArray(vao[0]);
     }
