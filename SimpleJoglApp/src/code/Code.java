@@ -37,8 +37,8 @@ public class Code extends JFrame implements GLEventListener {
         gl.glUseProgram(renderingProgram);
 
         x += inc;
-        if (x > 1.0f) inc = -0.01f;
-        if (x < -1.0f) inc = 0.01f;
+        /**if (x > 10.0f)*/ //inc = -0.001f;
+        /**if (x < -10.0f)*/ inc = 0.0015f;
         int offsetLoc = gl.glGetUniformLocation(renderingProgram, "inc");
         gl.glProgramUniform1f(renderingProgram, offsetLoc, x);
 
