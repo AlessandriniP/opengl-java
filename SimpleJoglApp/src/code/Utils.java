@@ -1,6 +1,8 @@
 package code;
 
+import java.io.*;
 import java.nio.*;
+import javax.swing.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +11,7 @@ import java.util.Vector;
 
 import static com.jogamp.opengl.GL4.*;
 import com.jogamp.opengl.*;
+import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.texture.*;
 import com.jogamp.common.nio.Buffers;
@@ -24,7 +27,8 @@ public class Utils
     public Utils() {}
 
     public static int createShaderProgram(String vS, String tCS, String tES, String gS, String fS)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int vShader  = prepareShader(GL_VERTEX_SHADER, vS);
         int tcShader = prepareShader(GL_TESS_CONTROL_SHADER, tCS);
         int teShader = prepareShader(GL_TESS_EVALUATION_SHADER, tES);
@@ -41,7 +45,8 @@ public class Utils
     }
 
     public static int createShaderProgram(String vS, String tCS, String tES, String fS)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int vShader  = prepareShader(GL_VERTEX_SHADER, vS);
         int tcShader = prepareShader(GL_TESS_CONTROL_SHADER, tCS);
         int teShader = prepareShader(GL_TESS_EVALUATION_SHADER, tES);
@@ -56,7 +61,8 @@ public class Utils
     }
 
     public static int createShaderProgram(String vS, String gS, String fS)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int vShader  = prepareShader(GL_VERTEX_SHADER, vS);
         int gShader = prepareShader(GL_GEOMETRY_SHADER, gS);
         int fShader  = prepareShader(GL_FRAGMENT_SHADER, fS);
@@ -69,7 +75,8 @@ public class Utils
     }
 
     public static int createShaderProgram(String vS, String fS)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int vShader  = prepareShader(GL_VERTEX_SHADER, vS);
         int fShader  = prepareShader(GL_FRAGMENT_SHADER, fS);
         int vfprogram = gl.glCreateProgram();
@@ -80,7 +87,8 @@ public class Utils
     }
 
     public static int finalizeProgram(int sprogram)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int[] linked = new int[1];
         gl.glLinkProgram(sprogram);
         checkOpenGLError();
@@ -93,7 +101,8 @@ public class Utils
     }
 
     private static int prepareShader(int shaderTYPE, String shader)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int[] shaderCompiled = new int[1];
         String shaderSource[] = readShaderSource(shader);
         int shaderRef = gl.glCreateShader(shaderTYPE);
@@ -114,28 +123,34 @@ public class Utils
     }
 
     private static String[] readShaderSource(String filename)
-    {	Vector<String> lines = new Vector<String>();
+    {
+        Vector<String> lines = new Vector<String>();
         Scanner sc;
         String[] program;
         try
-        {	sc = new Scanner(new File(filename));
+        {
+            sc = new Scanner(new File(filename));
             while (sc.hasNext())
-            {	lines.addElement(sc.nextLine());
+            {
+                lines.addElement(sc.nextLine());
             }
             program = new String[lines.size()];
             for (int i = 0; i < lines.size(); i++)
-            {	program[i] = (String) lines.elementAt(i) + "\n";
+            {
+                program[i] = (String) lines.elementAt(i) + "\n";
             }
         }
         catch (IOException e)
-        {	System.err.println("IOException reading file: " + e);
+        {
+            System.err.println("IOException reading file: " + e);
             return null;
         }
         return program;
     }
 
     private static void printShaderLog(int shader)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int[] len = new int[1];
         int[] chWrittn = new int[1];
         byte[] log = null;
@@ -143,17 +158,20 @@ public class Utils
         // determine the length of the shader compilation log
         gl.glGetShaderiv(shader, GL_INFO_LOG_LENGTH, len, 0);
         if (len[0] > 0)
-        {	log = new byte[len[0]];
+        {
+            log = new byte[len[0]];
             gl.glGetShaderInfoLog(shader, len[0], chWrittn, 0, log, 0);
             System.out.println("Shader Info Log: ");
             for (int i = 0; i < log.length; i++)
-            {	System.out.print((char) log[i]);
+            {
+                System.out.print((char) log[i]);
             }
         }
     }
 
     public static void printProgramLog(int prog)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int[] len = new int[1];
         int[] chWrittn = new int[1];
         byte[] log = null;
@@ -161,22 +179,26 @@ public class Utils
         // determine length of the program compilation log
         gl.glGetProgramiv(prog, GL_INFO_LOG_LENGTH, len, 0);
         if (len[0] > 0)
-        {	log = new byte[len[0]];
+        {
+            log = new byte[len[0]];
             gl.glGetProgramInfoLog(prog, len[0], chWrittn, 0, log, 0);
             System.out.println("Program Info Log: ");
             for (int i = 0; i < log.length; i++)
-            {	System.out.print((char) log[i]);
+            {
+                System.out.print((char) log[i]);
             }
         }
     }
 
     public static boolean checkOpenGLError()
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         boolean foundError = false;
         GLU glu = new GLU();
         int glErr = gl.glGetError();
         while (glErr != GL_NO_ERROR)
-        {	System.err.println("glError: " + glu.gluErrorString(glErr));
+        {
+            System.err.println("glError: " + glu.gluErrorString(glErr));
             foundError = true;
             glErr = gl.glGetError();
         }
@@ -184,7 +206,8 @@ public class Utils
     }
 
     public static int loadTexture(String textureFileName)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         int finalTextureRef;
         Texture tex = null;
         try { tex = TextureIO.newTexture(new File(textureFileName), false); }
@@ -196,7 +219,8 @@ public class Utils
         gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         gl.glGenerateMipmap(GL.GL_TEXTURE_2D);
         if (gl.isExtensionAvailable("GL_EXT_texture_filter_anisotropic"))
-        {	float anisoset[] = new float[1];
+        {
+            float anisoset[] = new float[1];
             gl.glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, anisoset, 0);
             gl.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisoset[0]);
         }
@@ -204,7 +228,8 @@ public class Utils
     }
 
     public static int loadTextureAWT(String textureFileName)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
         BufferedImage textureImage = getBufferedImage(textureFileName);
         byte[ ] imgRGBA = getRGBAPixelData(textureImage, true);
         ByteBuffer rgbaBuffer = Buffers.newDirectByteBuffer(imgRGBA);
@@ -223,7 +248,8 @@ public class Utils
         gl.glGenerateMipmap(GL.GL_TEXTURE_2D);
 
         if (gl.isExtensionAvailable("GL_EXT_texture_filter_anisotropic"))
-        {	float anisoset[] = new float[1];
+        {
+            float anisoset[] = new float[1];
             gl.glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, anisoset, 0);
             gl.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisoset[0]);
         }
@@ -231,7 +257,8 @@ public class Utils
     }
 
     public static int loadCubeMap(String dirName)
-    {	GL4 gl = (GL4) GLContext.getCurrentGL();
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
 
         String topFile = dirName + File.separator + "yp.jpg";
         String leftFile = dirName + File.separator + "xn.jpg";
@@ -293,7 +320,8 @@ public class Utils
     }
 
     private static BufferedImage getBufferedImage(String fileName)
-    {	BufferedImage img;
+    {
+        BufferedImage img;
         try {
             img = ImageIO.read(new File(fileName));	// assumes GIF, JPG, PNG, BMP
         } catch (IOException e) {
@@ -304,7 +332,8 @@ public class Utils
     }
 
     private static byte[] getRGBAPixelData(BufferedImage img, boolean flip)
-    {	int height = img.getHeight(null);
+    {
+        int height = img.getHeight(null);
         int width = img.getWidth(null);
 
         // create an (empty) BufferedImage with a suitable Raster and ColorModel
@@ -323,7 +352,8 @@ public class Utils
         Graphics2D g = newImage.createGraphics();
 
         if (flip)	// flip image vertically
-        {	AffineTransform gt = new AffineTransform();
+        {
+            AffineTransform gt = new AffineTransform();
             gt.translate(0, height);
             gt.scale(1, -1d);
             g.transform(gt);
