@@ -58,8 +58,6 @@ public class Code extends JFrame implements GLEventListener
         mvLoc = gl.glGetUniformLocation(renderingProgram, "mv_matrix");
         projLoc = gl.glGetUniformLocation(renderingProgram, "proj_matrix");
 
-        aspect = (float) myCanvas.getWidth() / (float) myCanvas.getHeight();
-        pMat.identity().setPerspective((float) Math.toRadians(60.0f), aspect, 0.1f, 1000.0f);
         gl.glUniformMatrix4fv(projLoc, 1, false, pMat.get(vals));
 
         // push view matrix onto the stack
@@ -67,6 +65,9 @@ public class Code extends JFrame implements GLEventListener
         mvStack.translate(-cameraX, -cameraY, -cameraZ);
 
         tf = elapsedTime/1000.0;  // time factor
+
+        // enable back-face culling
+        gl.glEnable(GL_CULL_FACE);
 
         // ----------------------  pyramid == sun  ----------------------
         mvStack.pushMatrix();
@@ -78,6 +79,7 @@ public class Code extends JFrame implements GLEventListener
         gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
         gl.glEnableVertexAttribArray(0);
         gl.glEnable(GL_DEPTH_TEST);
+        gl.glFrontFace(GL_CCW);
         gl.glDrawArrays(GL_TRIANGLES, 0, 18);
         mvStack.popMatrix();
 
@@ -90,6 +92,7 @@ public class Code extends JFrame implements GLEventListener
         gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
         gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
         gl.glEnableVertexAttribArray(0);
+        gl.glFrontFace(GL_CW);
         gl.glDrawArrays(GL_TRIANGLES, 0, 36);
         mvStack.popMatrix();
 
@@ -102,9 +105,18 @@ public class Code extends JFrame implements GLEventListener
         gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
         gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
         gl.glEnableVertexAttribArray(0);
+        gl.glFrontFace(GL_CW);
         gl.glDrawArrays(GL_TRIANGLES, 0, 36);
         mvStack.popMatrix();  mvStack.popMatrix();  mvStack.popMatrix();
         mvStack.popMatrix();
+    }
+
+    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height)
+    {
+        GL4 gl = (GL4) GLContext.getCurrentGL();
+        aspect = (float) width / (float) height; // new window width & height are provided by the callback
+        gl.glViewport(0,0, width, height); // sets region of screen associated with the frame buffer
+        pMat.identity().setPerspective((float) Math.toRadians(60.0f), aspect, 0.1f, 1000.0f);
     }
 
     public void init(GLAutoDrawable drawable)
@@ -114,6 +126,10 @@ public class Code extends JFrame implements GLEventListener
         renderingProgram = Utils.createShaderProgram("SimpleJoglApp/src/code/vertShader.glsl", "SimpleJoglApp/src/code/fragShader.glsl");
         setupVertices();
         cameraX = 0.0f; cameraY = 0.0f; cameraZ = 12.0f;
+
+        // build perspective matrix
+        aspect = (float) myCanvas.getWidth() / (float) myCanvas.getHeight();
+        pMat.identity().setPerspective((float) Math.toRadians(60.0f), aspect, 0.1f, 1000.0f);
     }
 
     private void setupVertices()
@@ -162,6 +178,5 @@ public class Code extends JFrame implements GLEventListener
     }
 
     public static void main(String[] args) { new Code(); }
-    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {}
     public void dispose(GLAutoDrawable drawable) {}
 }
