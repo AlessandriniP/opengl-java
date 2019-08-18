@@ -15,26 +15,25 @@ import org.joml.*;
 public class Code extends JFrame implements GLEventListener
 {
     private GLCanvas myCanvas;
+    private double startTime = 0.0;
+    private double elapsedTime;
     private int renderingProgram;
     private int vao[] = new int[1];
     private int vbo[] = new int[2];
     private float cameraX, cameraY, cameraZ;
-    private float cubeLocX, cubeLocY, cubeLocZ;
-    private float pyrLocX, pyrLocY, pyrLocZ;
 
     // allocate variables for display() function
-    private FloatBuffer vals = Buffers.newDirectFloatBuffer(16);  // buffer for transfering matrix to uniform
-    private Matrix4f pMat = new Matrix4f();  // perspective matrix
-    private Matrix4f vMat = new Matrix4f();  // view matrix
-    private Matrix4f mMat = new Matrix4f();  // model matrix
-    private Matrix4f mvMat = new Matrix4f(); // model-view matrix
+    private FloatBuffer vals = Buffers.newDirectFloatBuffer(16);
+    private Matrix4fStack mvStack = new Matrix4fStack(5);
+    private Matrix4f pMat = new Matrix4f();
     private int mvLoc, projLoc;
     private float aspect;
+    private double tf;
 
     public Code()
     {
         setTitle("Computergrafik - Übungen");
-        setSize(800, 800);
+        setSize(1280, 720);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         myCanvas = new GLCanvas();
@@ -43,15 +42,16 @@ public class Code extends JFrame implements GLEventListener
         this.setVisible(true);
 
         // optional animator
-        //Animator animator = new Animator(myCanvas);
-        //animator.start();
+        Animator animator = new Animator(myCanvas);
+        animator.start();
     }
 
     public void display(GLAutoDrawable drawable)
     {
         GL4 gl = (GL4) GLContext.getCurrentGL();
-        gl.glClear(GL_DEPTH_BUFFER_BIT);
         gl.glClear(GL_COLOR_BUFFER_BIT);
+        gl.glClear(GL_DEPTH_BUFFER_BIT);
+        elapsedTime = System.currentTimeMillis() - startTime;
 
         gl.glUseProgram(renderingProgram);
 
@@ -59,58 +59,61 @@ public class Code extends JFrame implements GLEventListener
         projLoc = gl.glGetUniformLocation(renderingProgram, "proj_matrix");
 
         aspect = (float) myCanvas.getWidth() / (float) myCanvas.getHeight();
-        pMat.setPerspective((float) Math.toRadians(60.0f), aspect, 0.1f, 1000.0f);
-
-        vMat.translation(-cameraX, -cameraY, -cameraZ);
-
-        // draw the cube (use buffer #0)
-        mMat.translation(cubeLocX, cubeLocY, cubeLocZ);
-
-        mvMat.identity();
-        mvMat.mul(vMat);
-        mvMat.mul(mMat);
-
-        gl.glUniformMatrix4fv(mvLoc, 1, false, mvMat.get(vals));
+        pMat.identity().setPerspective((float) Math.toRadians(60.0f), aspect, 0.1f, 1000.0f);
         gl.glUniformMatrix4fv(projLoc, 1, false, pMat.get(vals));
 
-        gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-        gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-        gl.glEnableVertexAttribArray(0);
+        // push view matrix onto the stack
+        mvStack.pushMatrix();
+        mvStack.translate(-cameraX, -cameraY, -cameraZ);
 
-        gl.glEnable(GL_DEPTH_TEST);
-        gl.glDepthFunc(GL_LEQUAL);
+        tf = elapsedTime/1000.0;  // time factor
 
-        gl.glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        // draw the pyramid (use buffer #1)
-        mMat.translation(pyrLocX, pyrLocY, pyrLocZ);
-
-        mvMat.identity();
-        mvMat.mul(vMat);
-        mvMat.mul(mMat);
-
-        gl.glUniformMatrix4fv(mvLoc, 1, false, mvMat.get(vals));
-        gl.glUniformMatrix4fv(projLoc, 1, false, pMat.get(vals));
-
+        // ----------------------  pyramid == sun  ----------------------
+        mvStack.pushMatrix();
+        mvStack.translate(0.0f, 0.0f, 0.0f);
+        mvStack.pushMatrix();
+        mvStack.rotate((float)tf, 1.0f, 0.0f, 0.0f);
+        gl.glUniformMatrix4fv(mvLoc, 1, false, mvStack.get(vals));
         gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
         gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
         gl.glEnableVertexAttribArray(0);
-
         gl.glEnable(GL_DEPTH_TEST);
-        gl.glDepthFunc(GL_LEQUAL);
-
         gl.glDrawArrays(GL_TRIANGLES, 0, 18);
+        mvStack.popMatrix();
+
+        // -----------------------  cube == planet  ----------------------
+        mvStack.pushMatrix();
+        mvStack.translate((float)Math.sin(tf)*4.0f, 0.0f, (float)Math.cos(tf)*4.0f);
+        mvStack.pushMatrix();
+        mvStack.rotate((float)tf, 0.0f, 1.0f, 0.0f);
+        gl.glUniformMatrix4fv(mvLoc, 1, false, mvStack.get(vals));
+        gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+        gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL_TRIANGLES, 0, 36);
+        mvStack.popMatrix();
+
+        // -----------------------  smaller cube == moon----------------------
+        mvStack.pushMatrix();
+        mvStack.translate(0.0f, (float)Math.sin(tf)*2.0f, (float)Math.cos(tf)*2.0f);
+        mvStack.rotate((float)tf, 0.0f, 0.0f, 1.0f);
+        mvStack.scale(0.25f, 0.25f, 0.25f);
+        gl.glUniformMatrix4fv(mvLoc, 1, false, mvStack.get(vals));
+        gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+        gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL_TRIANGLES, 0, 36);
+        mvStack.popMatrix();  mvStack.popMatrix();  mvStack.popMatrix();
+        mvStack.popMatrix();
     }
 
     public void init(GLAutoDrawable drawable)
     {
         GL4 gl = (GL4) drawable.getGL();
+        startTime = System.currentTimeMillis();
         renderingProgram = Utils.createShaderProgram("SimpleJoglApp/src/code/vertShader.glsl", "SimpleJoglApp/src/code/fragShader.glsl");
         setupVertices();
-        // setup the position of the objects
-        cameraX = 0.0f; cameraY = 0.0f; cameraZ = 8.0f;
-        cubeLocX = 0.0f; cubeLocY = -2.0f; cubeLocZ = 0.0f;
-        pyrLocX = 2.0f; pyrLocY = 2.0f; pyrLocZ = 0.0f;
+        cameraX = 0.0f; cameraY = 0.0f; cameraZ = 12.0f;
     }
 
     private void setupVertices()
