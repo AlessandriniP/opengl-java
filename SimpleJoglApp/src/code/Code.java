@@ -36,7 +36,9 @@ public class Code extends JFrame implements GLEventListener
         setSize(1280, 720);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        myCanvas = new GLCanvas();
+        GLProfile glp = GLProfile.getMaxProgrammableCore(true);
+        GLCapabilities caps = new GLCapabilities(glp);
+        myCanvas = new GLCanvas(caps);
         myCanvas.addGLEventListener(this);
         this.add(myCanvas);
         this.setVisible(true);
